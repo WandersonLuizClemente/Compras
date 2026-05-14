@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Serviços Externos — Forte Ambiental</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F4F1;--surface:#FFF;--border:#D8D5CF;
+  --text:#1A1916;--muted:#7A776F;
+  --blue:#185FA5;--blue-lt:#E6F1FB;
+  --green:#1B7A3E;--green-lt:#EAF3DE;
+  --amber:#854F0B;--amber-lt:#FAEEDA;
+  --red:#A32D2D;--red-lt:#FCEBEB;
+  --wa:#25D366;--r:6px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* layout */
+.shell{display:grid;grid-template-columns:210px 1fr;min-height:100vh}
+.sidebar{background:var(--text);color:#fff;padding:28px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo-mark{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.4);text-transform:uppercase}
+.logo-name{font-size:14px;font-weight:600;margin-top:3px}
+nav{margin-top:16px;flex:1}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 20px;font-size:13px;cursor:pointer;color:rgba(255,255,255,.55);border-left:3px solid transparent;transition:all .15s}
+.ni svg{width:15px;height:15px;flex-shrink:0}
+.ni:hover{color:#fff;background:rgba(255,255,255,.06)}
+.ni.on{color:#fff;background:rgba(255,255,255,.1);border-left-color:var(--blue)}
+.sfooter{padding:14px 20px;border-top:1px solid rgba(255,255,255,.1);font-size:10px;color:rgba(255,255,255,.25);font-family:'IBM Plex Mono',monospace}
+.main{padding:28px 32px;overflow-y:auto}
+.page{display:none}.page.on{display:block}
+.ph{margin-bottom:24px}
+.pt{font-size:20px;font-weight:600;letter-spacing:-.03em}
+.ps{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;margin-bottom:16px}
+.cl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:500}
+
+/* form */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:500;color:var(--muted)}
+.field input,.field select,.field textarea{
+  padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);
+  font-size:13px;font-family:'IBM Plex Sans',sans-serif;background:var(--surface);color:var(--text);outline:none;transition:border .15s
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.1)}
+.field textarea{resize:vertical;min-height:68px}
+
+/* priority */
+.prow{display:flex;gap:6px;margin-top:6px}
+.pb{flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);transition:all .15s;font-family:inherit;text-align:center}
+.pb.p-baixa{background:var(--green-lt);border-color:var(--green);color:var(--green)}
+.pb.p-media{background:var(--amber-lt);border-color:var(--amber);color:var(--amber)}
+.pb.p-alta{background:var(--red-lt);border-color:var(--red);color:var(--red)}
+.pb.p-urgente{background:#FFF1EB;border-color:#D84B1B;color:#993C1D}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;transition:all .15s}
+.btn:hover{background:var(--bg)}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-p:hover{background:#0C447C}
+.btn-sm{padding:5px 10px;font-size:11px}
+.arow{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}.btn-danger:hover{background:#7a1a1a}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap}
+.b-pend{background:var(--amber-lt);color:var(--amber);border:1px solid #EF9F27}
+.b-aprov{background:var(--green-lt);color:var(--green);border:1px solid #639922}
+.b-repr{background:var(--red-lt);color:var(--red);border:1px solid #E24B4A}
+.b-comp{background:var(--blue-lt);color:var(--blue);border:1px solid #378ADD}
+.b-entr{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+
+/* orders table */
+.ot{width:100%;border-collapse:collapse;font-size:13px}
+.ot th{font-size:11px;font-weight:500;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);background:var(--bg);white-space:nowrap}
+.ot td{padding:9px 10px;border-bottom:1px solid var(--bg);vertical-align:middle}
+.ot tr:hover td{background:#FAFAF8}
+.ssel{padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--surface);cursor:pointer}
+.pdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.d-b{background:var(--green)}.d-m{background:var(--amber)}.d-a{background:var(--red)}.d-u{background:#D84B1B}
+
+/* chips */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.chip{padding:4px 12px;border:1px solid var(--border);border-radius:999px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--muted);transition:all .12s}
+.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sbox{margin-left:auto;padding:5px 12px;border:1px solid var(--border);border-radius:999px;font-size:12px;background:var(--surface);color:var(--text);outline:none;width:180px}
+.sbox:focus{border-color:var(--blue)}
+
+/* config */
+.cnote{background:var(--blue-lt);border:1px solid #378ADD;border-radius:var(--r);padding:11px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;line-height:1.6}
+.cnote code{font-family:'IBM Plex Mono',monospace;background:rgba(24,95,165,.1);padding:1px 5px;border-radius:3px}
+
+/* toast / loading */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;opacity:0;transform:translateY(6px);pointer-events:none;transition:all .22s;z-index:999}
+.toast.on{opacity:1;transform:translateY(0)}
+#ld{position:fixed;inset:0;background:rgba(26,25,22,.5);display:none;align-items:center;justify-content:center;z-index:9999}
+.lb{background:#fff;border-radius:var(--r);padding:26px 34px;text-align:center;font-size:13px;color:var(--muted)}
+.sp{width:26px;height:26px;border:3px solid var(--bg);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* table wrap */
+.tw{overflow-x:auto}
+
+/* métricas */
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.ml{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.mv{font-size:24px;font-weight:600;letter-spacing:-.04em}
+.ct{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:12px;font-family:'IBM Plex Mono',monospace;letter-spacing:.05em;text-transform:uppercase}
+
+/* placas config */
+#cfg-placas-lista{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;max-height:200px;overflow-y:auto;padding:2px}
+
+@media(max-width:880px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;padding:10px}
+  .logo{border-bottom:none;padding:0 10px 0 0}
+  nav{display:flex;flex-wrap:wrap}.ni{padding:7px 10px;border-left:none;font-size:12px}
+  .main{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<div id="ld"><div class="lb"><div class="sp"></div>Aguarde...</div></div>
+<div class="toast" id="toast"></div>
+
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Sistema v2</div>
+    <div class="logo-name">Serviços Externos</div>
+  </div>
+  <nav>
+    <div class="ni on" onclick="go('svc',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      Serviços Externos
+    </div>
+    <div class="ni" onclick="go('cfg',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>
+      Configurações
+    </div>
+  </nav>
+  <div class="sfooter">v2.0 · Sheets</div>
+</aside>
+
+<main class="main">
+
+<!-- ══ SERVIÇOS EXTERNOS ════════════════════════════════════════ -->
+<div id="p-svc" class="page on">
+  <div class="ph">
+    <div class="pt">Serviços Externos</div>
+    <div class="ps">Registro de veículos em manutenção externa — dias parados calculados automaticamente</div>
+  </div>
+
+  <div class="card">
+    <div class="cl">Nova Ordem de Serviço Externo</div>
+    <div class="g2">
+      <div class="field">
+        <label>Contrato *</label>
+        <select id="sv-contrato">
+          <option value="">Selecionar...</option>
+          <option>Anchieta</option>
+          <option>Cariacica</option>
+          <option>Cesan</option>
+          <option>Vitória</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Data de Entrada *</label>
+        <input type="date" id="sv-data"/>
+      </div>
+      <div class="field">
+        <label>Placa *</label>
+        <select id="sv-placa">
+          <option value="">Selecionar placa...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Oficina de Destino *</label>
+        <input id="sv-oficina" placeholder="Nome da oficina"/>
+      </div>
+      <div class="field">
+        <label>Km atual</label>
+        <input type="number" id="sv-km" placeholder="Ex: 125430"/>
+      </div>
+      <div class="field">
+        <label>Hr atual (horímetro)</label>
+        <input type="number" id="sv-hr" placeholder="Ex: 2340"/>
+      </div>
+      <div class="field full">
+        <label>Descrição da Falha *</label>
+        <textarea id="sv-falha" placeholder="Descreva o problema identificado, sintomas, histórico..."></textarea>
+      </div>
+    </div>
+
+    <!-- Prioridade -->
+    <div style="margin-top:14px">
+      <div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px">Prioridade</div>
+      <div class="prow">
+        <button class="pb" id="spb-baixa"  onclick="svPrio('baixa')">🟢 Baixa</button>
+        <button class="pb" id="spb-media"  onclick="svPrio('media')">🟡 Média</button>
+        <button class="pb" id="spb-alta"   onclick="svPrio('alta')">🔴 Alta</button>
+        <button class="pb" id="spb-urgente" onclick="svPrio('urgente')">🚨 Urgente</button>
+      </div>
+    </div>
+
+    <div class="arow">
+      <button class="btn btn-p" onclick="svSubmit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Registrar Serviço
+      </button>
+      <button class="btn" onclick="svLimpar()">Limpar</button>
+    </div>
+  </div>
+
+  <!-- ── DASH STATUS ─────────────────────────────── -->
+  <div style="margin-top:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:600;letter-spacing:-.02em">Dashboard — Serviços Externos</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Dias parados calculados a partir da data de entrada</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="loadSvData()">↻ Atualizar</button>
+        <button class="btn btn-sm" onclick="svExpCSV()">Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- métricas -->
+    <div id="sv-metrics" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px"></div>
+
+    <!-- gráficos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="card" style="padding:16px 18px;margin:0">
+        <div class="ct">Distribuição por Oficina</div>
+        <canvas id="sv-ch-oficina" height="110"></canvas>
+      </div>
+      <div class="card" style="padding:16px 18px;margin:0">
+        <div class="ct">Distribuição por Contrato</div>
+        <canvas id="sv-ch-contrato" height="110"></canvas>
+      </div>
+    </div>
+    <div class="card" style="padding:16px 18px;margin-bottom:14px">
+      <div class="ct">
+        Dias parados por placa (ativas)
+        <span style="font-size:9px;color:var(--red);margin-left:8px;text-transform:none;font-weight:400">🚨 vermelho = 7+ dias sem finalizar</span>
+      </div>
+      <canvas id="sv-ch-linha" height="70"></canvas>
+    </div>
+
+    <!-- filtros -->
+    <div class="chips">
+      <span class="chip on" onclick="svFil(this,'todos')">Todos</span>
+      <span class="chip" onclick="svFil(this,'Em Andamento')">Em Andamento</span>
+      <span class="chip" onclick="svFil(this,'Esperando Aprovação')">Esp. Aprovação</span>
+      <span class="chip" onclick="svFil(this,'Aguardando Peça')">Ag. Peça</span>
+      <span class="chip" onclick="svFil(this,'Aprovado')">Aprovado</span>
+      <span class="chip" onclick="svFil(this,'Entregue')">Entregue</span>
+      <span class="chip" onclick="svFil(this,'Cancelado')">Cancelado</span>
+      <input class="sbox" id="sv-q" placeholder="Buscar placa / oficina..." oninput="svRenderDash()"/>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:0">
+      <div class="tw">
+        <table class="ot">
+          <thead><tr>
+            <th>ID</th><th>Placa</th><th>Contrato</th><th>Oficina</th>
+            <th>Prioridade</th><th>Entrada</th><th>⏱ Parado</th><th>Status</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="sv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIGURAÇÕES ═══════════════════════════════════════════ -->
+<div id="p-cfg" class="page">
+  <div class="ph"><div class="pt">Configurações</div><div class="ps">URL do Apps Script e gerenciamento de placas</div></div>
+
+  <div class="cnote">
+    📋 <strong>Como implantar o .gs:</strong> Abra o Google Sheets → Extensões → Apps Script → Cole o código <code>Codigo.gs</code> → Implantar → Novo Implantação → App da Web<br>
+    Execute como: <code>Eu</code> · Acesso: <code>Qualquer pessoa, mesmo anônimos</code> → copie a URL gerada e cole abaixo
+  </div>
+
+  <div class="card">
+    <div class="cl">Conexão Apps Script</div>
+    <div class="field">
+      <label>URL do Web App *</label>
+      <input id="cfg-url" placeholder="https://script.google.com/macros/s/XXXXX/exec"/>
+    </div>
+  </div>
+
+  <!-- Gerenciar Placas -->
+  <div class="card">
+    <div class="cl">Gerenciar Lista de Placas</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+      Adicione ou remova placas da lista suspensa de <b>Serviços Externos</b>.
+      As alterações são salvas localmente e aplicadas imediatamente.
+    </div>
+    <div id="cfg-placas-lista"></div>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <div class="field" style="flex:1;min-width:150px">
+        <label>Nova placa</label>
+        <input id="cfg-nova-placa" placeholder="Ex: ABC1D23"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" maxlength="8"/>
+      </div>
+      <button class="btn btn-p btn-sm" style="margin-bottom:1px" onclick="cfgAdicionarPlaca()">+ Adicionar</button>
+      <button class="btn btn-sm" style="margin-bottom:1px" onclick="cfgSalvarPlacas()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        Salvar e Aplicar
+      </button>
+      <button class="btn btn-sm" onclick="cfgImportarPlacas()" title="Cole uma lista separada por vírgula ou nova linha">📋 Importar lista</button>
+    </div>
+    <div id="cfg-placas-count" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+  </div>
+
+  <div class="arow">
+    <button class="btn btn-p" onclick="saveCfg()">Salvar configurações</button>
+    <button class="btn" onclick="testConn()">Testar conexão</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// PLACAS (lista dinâmica)
+// ══════════════════════════════════════════════════════════════
+const PLACAS_DEFAULT = [
+  "BKD5E99","FCJ1E40","KPG9A21","LMMA476","MPR0J34","MQJ9710","MRA4533",
+  "MTD9331","MTT9B97","MTW1229","MTY0I54","OCV0341","OCW2H32","ODB3481",
+  "ODS9389","ODS9D91","OYD4595","OYD4F94","OYJ8B67","OYK6775","PPA1E58",
+  "PPB7802","PPD0F75","PPD6H56","PPD6I72","PPE2095","PPE3G42","PPE9523",
+  "PPK5H06","PPR2438","PPR2504","PPR2582","PPU9I01","PPV5I39","PPV6431",
+  "PPV6432","PPV6433","PPV6434","PPV6E35","PPV6E52","PPX7409","PPY4G51",
+  "PPY9D76","QRE3C86","QRE3D07","QRE3D35","QRE3E27","QRF3H28","QRF3H52",
+  "QRF3H60","QRG2B71","QRH3E35","QRH3E46","QRH3E62","QRH5A45","QRH5A59",
+  "QRH5A94","QRH5B00","QRH5B18","QRH7A16","QRH7J04","QRI2F45","QRI2G06",
+  "QRJ6H82","QRK7D63","QRL4A22","RBA5J73","RBF3D43","RBF3D81","RBG3B53",
+  "RBJ4F22","RQM5B80","RQM9A12","RQN0C56","RQN2G03","RQN4E33","RQN5A28",
+  "RQN7I71","RQO2J95","RQP4B14","RQQ2D20","RQR0I49","RQS9A32","RQT6B99",
+  "SFQ3C04","SFR4D77","SFS2C75","SFT7J72","SGC5F37","SGH0H73","SGH3J96",
+  "SGI3E41","SGI3E44","SGJ8B16","SGJ8F02","SGJ8F05","SGK3D11","SGK3D12",
+  "SGL1E82","SGL3C77","SGM3G82","SGM3G83","SGM3G84","SGM3G85","SGM3G86",
+  "SGM3G87","SGM3G88","TOG9I64","TOH3A95"
+];
+
+function getPlacas(){
+  const saved = localStorage.getItem('placas_lista');
+  return saved ? JSON.parse(saved) : [...PLACAS_DEFAULT];
+}
+function savePlacas(list){
+  localStorage.setItem('placas_lista', JSON.stringify(list.sort()));
+}
+function applyPlacas(){
+  const list = getPlacas();
+  const opts = '<option value="">Selecionar placa...</option>' + list.map(p=>`<option>${p}</option>`).join('');
+  const el = document.getElementById('sv-placa');
+  if(el) el.innerHTML = opts;
+}
+function cfgRenderPlacas(){
+  const list = getPlacas();
+  const wrap = document.getElementById('cfg-placas-lista');
+  const cnt  = document.getElementById('cfg-placas-count');
+  if(!wrap) return;
+  wrap.innerHTML = list.map(p=>`
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:0.5px solid var(--border);border-radius:999px;padding:3px 10px;font-size:11px;font-family:'IBM Plex Mono',monospace">
+      ${p}
+      <button onclick="cfgRemoverPlaca('${p}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:0 2px" title="Remover">×</button>
+    </span>`).join('');
+  if(cnt) cnt.textContent = `${list.length} placa(s) na lista`;
+}
+function cfgAdicionarPlaca(){
+  const input = document.getElementById('cfg-nova-placa');
+  const val   = (input?.value||'').trim().toUpperCase();
+  if(!val || val.length < 5){ toast('Digite uma placa válida (mín. 5 caracteres).'); return; }
+  const list = getPlacas();
+  if(list.includes(val)){ toast('Placa já está na lista!'); return; }
+  list.push(val);
+  savePlacas(list);
+  if(input) input.value = '';
+  cfgRenderPlacas();
+  toast(`✅ ${val} adicionada!`);
+}
+function cfgRemoverPlaca(placa){
+  const list = getPlacas().filter(p => p !== placa);
+  savePlacas(list);
+  cfgRenderPlacas();
+  toast(`${placa} removida.`);
+}
+function cfgSalvarPlacas(){
+  applyPlacas();
+  cfgRenderPlacas();
+  toast('✅ Lista de placas salva e aplicada!');
+}
+function cfgImportarPlacas(){
+  const texto = prompt('Cole a lista de placas (separadas por vírgula, ponto-e-vírgula ou nova linha):');
+  if(!texto) return;
+  const novas = texto.split(/[,;\n]+/).map(p=>p.trim().toUpperCase().replace(/[^A-Z0-9]/g,'')).filter(p=>p.length>=5);
+  if(!novas.length){ toast('Nenhuma placa válida encontrada.'); return; }
+  const list = [...new Set([...getPlacas(), ...novas])].sort();
+  savePlacas(list);
+  cfgRenderPlacas();
+  toast(`✅ ${novas.length} placa(s) importada(s)!`);
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE & CONFIG
+// ══════════════════════════════════════════════════════════════
+let CFG = JSON.parse(localStorage.getItem('cfg_sv') || '{}');
+let SV_DATA   = [];
+let SV_PRIO   = '';
+let SV_FILTER = 'todos';
+let SV_IC     = 0;
+let CHARTS    = {};
+
+// ══════════════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════════════
+function go(p, el){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('on'));
+  document.getElementById('p-'+p).classList.add('on');
+  el.classList.add('on');
+  if(p==='svc') loadSvData();
+  if(p==='cfg') { loadCfgUI(); cfgRenderPlacas(); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════
+function loadCfgUI(){
+  document.getElementById('cfg-url').value = CFG.url || '';
+}
+function saveCfg(){
+  CFG.url = document.getElementById('cfg-url').value.trim();
+  localStorage.setItem('cfg_sv', JSON.stringify(CFG));
+  toast('✅ Configurações salvas!');
+}
+async function testConn(){
+  if(!CFG.url){ toast('Configure a URL primeiro!'); return; }
+  ld(true);
+  try{
+    const r = await fetch(CFG.url + '?action=ping');
+    const j = await r.json();
+    toast(j.ok ? '✅ Conexão OK! Sheets respondeu.' : '❌ Erro: ' + j.error);
+  }catch(e){ toast('❌ Falha: ' + e.message); }
+  ld(false);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SERVIÇOS EXTERNOS
+// ══════════════════════════════════════════════════════════════
+async function loadSvData(){
+  if(!CFG.url){ svRenderDash(); return; }
+  ld(true);
+  try{
+    const r = await fetch(CFG.url + '?action=get_servicos');
+    const j = await r.json();
+    if(j.ok && j.data && j.data.servicos){
+      SV_DATA = j.data.servicos;
+      SV_DATA.forEach(r=>{
+        const n = parseInt((r.id||'').replace(/\D/g,''));
+        if(!isNaN(n) && n > SV_IC) SV_IC = n;
+      });
+    }
+  }catch(_){ toast('Usando cache local (sem conexão).'); }
+  svRenderDash();
+  ld(false);
+}
+
+function svPrio(p){
+  SV_PRIO = p;
+  ['baixa','media','alta','urgente'].forEach(x=>{
+    const b = document.getElementById('spb-'+x);
+    if(b){ b.className='pb'; if(x===p) b.classList.add('p-'+x); }
+  });
+}
+
+function svGerarID(){
+  SV_IC++;
+  return 'SE-' + String(SV_IC).padStart(4,'0');
+}
+
+function svDiasParados(dataEntrada){
+  if(!dataEntrada) return '—';
+  const dt = new Date(dataEntrada + 'T00:00:00');
+  if(isNaN(dt)) return '—';
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  return Math.max(0, Math.round((hoje - dt) / 864e5));
+}
+
+function svSubmit(){
+  const contrato = document.getElementById('sv-contrato').value;
+  const data     = document.getElementById('sv-data').value;
+  const placa    = document.getElementById('sv-placa').value;
+  const falha    = document.getElementById('sv-falha').value.trim();
+  const oficina  = document.getElementById('sv-oficina').value.trim();
+  if(!contrato || !data || !placa || !falha || !oficina){
+    toast('Preencha: Contrato, Data, Placa, Falha e Oficina.'); return;
+  }
+  const reg = {
+    id:         svGerarID(),
+    contrato,   data,   placa,
+    km:         document.getElementById('sv-km').value || '',
+    hr:         document.getElementById('sv-hr').value || '',
+    prioridade: SV_PRIO || 'media',
+    oficina,    falha,
+    status:     'Em Andamento',
+    criadoEm:   new Date().toISOString()
+  };
+  SV_DATA.unshift(reg);
+  if(CFG.url){
+    fetch(CFG.url, { method:'POST', body: JSON.stringify({ action:'servico_externo', ...reg }) })
+      .then(r=>r.json())
+      .then(j=>{ if(!j.ok) toast('⚠ Sheets: ' + j.error); })
+      .catch(()=>{ toast('⚠ Registro salvo localmente (sem conexão).'); });
+  }
+  toast('✅ Serviço ' + reg.id + ' registrado!');
+  svLimpar();
+  svRenderDash();
+}
+
+function svLimpar(){
+  ['sv-contrato','sv-data','sv-placa','sv-km','sv-hr','sv-falha','sv-oficina'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  SV_PRIO = '';
+  ['baixa','media','alta','urgente'].forEach(x=>{
+    const b = document.getElementById('spb-'+x); if(b) b.className='pb';
+  });
+}
+
+function svFil(el, s){
+  SV_FILTER = s;
+  document.querySelectorAll('#p-svc .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  svRenderDash();
+}
+
+function svBadge(s){
+  const m = {
+    'Em Andamento':        ['b-comp',  '🔧'],
+    'Esperando Aprovação': ['b-pend',  '⏳'],
+    'Aguardando Peça':     ['b-pend',  '📦'],
+    'Aprovado':            ['b-aprov', '✅'],
+    'Entregue':            ['b-entr',  '🏁'],
+    'Cancelado':           ['b-repr',  '❌'],
+  };
+  const [cls, ico] = m[s] || ['b-entr','—'];
+  return `<span class="badge ${cls}">${ico} ${s}</span>`;
+}
+
+function svDiasColor(dias, status){
+  if(status==='Entregue' || status==='Cancelado' || status==='Aprovado') return 'color:var(--muted)';
+  if(typeof dias !== 'number') return '';
+  if(dias >= 7)  return 'color:var(--red);font-weight:700;font-size:13px';
+  if(dias >= 4)  return 'color:var(--amber);font-weight:600';
+  return 'color:var(--green);font-weight:500';
+}
+
+function svRenderDash(){
+  const q = (document.getElementById('sv-q')?.value || '').toLowerCase();
+  const statusList = ['Em Andamento','Esperando Aprovação','Aguardando Peça','Aprovado','Entregue','Cancelado'];
+  const emojis     = ['🔧','⏳','📦','✅','🏁','❌'];
+  const cores      = ['var(--blue)','var(--amber)','var(--amber)','var(--green)','var(--muted)','var(--red)'];
+  const metrics = document.getElementById('sv-metrics');
+  if(metrics){
+    metrics.innerHTML = statusList.map((s,i)=>{
+      const cnt = SV_DATA.filter(r=>r.status===s).length;
+      const pct = SV_DATA.length ? Math.round((cnt/SV_DATA.length)*100) : 0;
+      return `<div class="mc" style="padding:10px 12px;margin:0;position:relative;overflow:hidden">
+        <div class="ml" style="font-size:8px;line-height:1.3">${emojis[i]} ${s}</div>
+        <div class="mv" style="font-size:20px;color:${cores[i]};letter-spacing:-.03em">${cnt}</div>
+        <div style="font-size:10px;color:${cores[i]};margin-top:2px;font-weight:500">${pct}% do total</div>
+        <div style="font-size:18px;font-weight:700;color:${cores[i]};opacity:.15;position:absolute;bottom:3px;right:7px;line-height:1">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // gráficos pizza
+  const ofMap={}, ctMap={};
+  SV_DATA.forEach(r=>{
+    if(r.oficina)  ofMap[r.oficina]  = (ofMap[r.oficina]  || 0) + 1;
+    if(r.contrato) ctMap[r.contrato] = (ctMap[r.contrato] || 0) + 1;
+  });
+  const ofEntries = Object.entries(ofMap).sort((a,b)=>b[1]-a[1]);
+  const ctEntries = Object.entries(ctMap).sort((a,b)=>b[1]-a[1]);
+  const paleta = ['#185FA5','#1B7A3E','#BA7517','#C0261E','#534AB7','#D84B1B','#1B9EBC','#888780'];
+
+  const mkPizza = (key, canvasId, entries) => {
+    const canvas = document.getElementById(canvasId);
+    if(!canvas || !window.Chart) return;
+    if(CHARTS[key]) CHARTS[key].destroy();
+    if(!entries.length) return;
+    const tot = entries.reduce((s,[,v])=>s+v,0) || 1;
+    CHARTS[key] = new Chart(canvas, {
+      type:'doughnut',
+      data:{
+        labels: entries.map(([k])=>k),
+        datasets:[{ data:entries.map(([,v])=>v), backgroundColor:paleta, borderWidth:2, borderColor:'#fff' }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, cutout:'52%',
+        plugins:{
+          legend:{ position:'bottom', labels:{ font:{size:10}, boxWidth:10, padding:8 }},
+          tooltip:{ callbacks:{ label: ctx => {
+            const pct = ((ctx.parsed/tot)*100).toFixed(0);
+            return ` ${ctx.label}: ${ctx.parsed} veículo(s) — ${pct}%`;
+          }}}
+        }
+      }
+    });
+  };
+  mkPizza('sv-oficina',  'sv-ch-oficina',  ofEntries);
+  mkPizza('sv-contrato', 'sv-ch-contrato', ctEntries);
+
+  // gráfico barra: dias parados por placa
+  const canLinha = document.getElementById('sv-ch-linha');
+  if(canLinha && window.Chart){
+    if(CHARTS['sv-linha']) CHARTS['sv-linha'].destroy();
+    const placaMap = {};
+    SV_DATA.forEach(r=>{
+      if(r.status==='Entregue' || r.status==='Cancelado') return;
+      const dias = svDiasParados(r.data);
+      if(typeof dias==='number'){
+        if(!placaMap[r.placa] || placaMap[r.placa] < dias) placaMap[r.placa] = dias;
+      }
+    });
+    const sorted = Object.entries(placaMap).sort((a,b)=>b[1]-a[1]).slice(0,20);
+    const barColors = sorted.map(([,d])=> d>=7 ? '#A32D2D' : d>=4 ? '#BA7517' : '#1B7A3E');
+    if(sorted.length){
+      CHARTS['sv-linha'] = new Chart(canLinha, {
+        type:'bar',
+        data:{
+          labels: sorted.map(([p])=>p),
+          datasets:[{
+            label:'Dias parados',
+            data: sorted.map(([,d])=>d),
+            backgroundColor: barColors, borderColor: barColors,
+            borderWidth:1, borderRadius:4
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:true,
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{label:ctx=>{
+              const d=ctx.parsed.y;
+              return ` ${d} dia(s)${d>=7?' 🚨 ALERTA':''}`;
+            }}}
+          },
+          scales:{
+            y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'rgba(0,0,0,.05)'},title:{display:true,text:'Dias parados',font:{size:10}}},
+            x:{grid:{display:false},ticks:{font:{size:10}}}
+          }
+        }
+      });
+    }
+  }
+
+  // tabela
+  let data = SV_DATA.filter(r=>{
+    const ms = SV_FILTER==='todos' || r.status===SV_FILTER;
+    const mq = !q || [r.placa,r.oficina,r.contrato,r.id].some(x=>(x||'').toLowerCase().includes(q));
+    return ms && mq;
+  });
+  const tb = document.getElementById('sv-tbody');
+  if(!tb) return;
+  if(!data.length){
+    tb.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">Nenhum registro encontrado.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = data.map(r=>{
+    const dias   = svDiasParados(r.data);
+    const dColor = svDiasColor(dias, r.status);
+    return `<tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${r.id}</td>
+      <td style="font-weight:600">${r.placa}</td>
+      <td>${r.contrato}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.oficina}">${r.oficina}</td>
+      <td><span class="pdot d-${(r.prioridade||'m')[0]}"></span>${cap(r.prioridade)}</td>
+      <td style="font-size:12px;color:var(--muted)">${r.data||'—'}</td>
+      <td style="text-align:center;font-family:'IBM Plex Mono',monospace;${dColor}">${typeof dias==='number'?(dias>=7?'🚨 ':'')+dias+'d':'—'}</td>
+      <td>
+        <select class="ssel" onchange="svChangeStatus('${r.id}',this.value);this.value=''">
+          <option value="">${r.status}</option>
+          <option>Em Andamento</option>
+          <option>Esperando Aprovação</option>
+          <option>Aguardando Peça</option>
+          <option>Aprovado</option>
+          <option>Entregue</option>
+          <option>Cancelado</option>
+        </select>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="svRemover('${r.id}')">× Remover</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function svChangeStatus(id, status){
+  if(!status) return;
+  const idx = SV_DATA.findIndex(r=>r.id===id);
+  if(idx < 0) return;
+  SV_DATA[idx].status = status;
+  if(status==='Entregue') SV_DATA[idx].dataEntrega = new Date().toISOString().slice(0,10);
+  if(CFG.url){
+    fetch(CFG.url, { method:'POST', body: JSON.stringify({ action:'sv_update_status', id, status }) })
+      .catch(()=>{});
+  }
+  svRenderDash();
+  toast(`${id} → ${status}`);
+}
+
+function svRemover(id){
+  if(!confirm(`Remover o registro ${id}?`)) return;
+  SV_DATA = SV_DATA.filter(r=>r.id!==id);
+  if(CFG.url){
+    fetch(CFG.url, { method:'POST', body: JSON.stringify({ action:'sv_update_status', id, status:'Cancelado' }) })
+      .catch(()=>{});
+  }
+  svRenderDash();
+  toast(`${id} removido.`);
+}
+
+function svExpCSV(){
+  if(!SV_DATA.length){ toast('Sem dados para exportar.'); return; }
+  const h = ['ID','Contrato','Data','Placa','Km','Hr','Prioridade','Oficina','Falha','Status','DiasParados'];
+  const rows = SV_DATA.map(r=>[r.id,r.contrato,r.data,r.placa,r.km,r.hr,r.prioridade,r.oficina,r.falha,r.status,svDiasParados(r.data)]);
+  const csv  = [h,...rows].map(r=>r.map(c=>`"${c||''}"`).join(',')).join('\n');
+  const a    = document.createElement('a');
+  a.href     = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'servicos_externos_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function cap(s){ return s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'; }
+function ld(s){ document.getElementById('ld').style.display = s ? 'flex' : 'none'; }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2800);
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+applyPlacas();
+loadSvData();
+</script>
+</body>
+</html>
